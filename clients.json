@@ -1,0 +1,8 @@
+{
+  "TOPLINE": {
+    "name": "Topline Middle East Pipelines",
+    "logo_initials": "TM", "extract_url":"https://defaultb8b44762d7d943399e6f83a2a4cf72.ae.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/58ddddb556e04557ac28775bc279e4d9/triggers/manual/paths/invoke?api-version=1",
+"confirm_url":"https://defaultb8b44762d7d943399e6f83a2a4cf72.ae.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/fe258e7a0fd54857bfead71c3cffe6cb/triggers/manual/paths/invoke?api-version=1",
+    "persons": ["Raju", "Sarfaraz", "Faiyaz", "Kaif", "Khalil", "Azatour", "Deep", "Hassan"]
+  }
+}

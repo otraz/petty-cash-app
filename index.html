@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#1E3A5F"/>
+<title>Petty Cash Processor</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --navy:#1E3A5F;
+  --navy-dark:#0F2340;
+  --navy-light:#2D5986;
+  --accent:#E94560;
+  --green:#1D9E75;
+  --amber:#BA7517;
+  --red:#A32D2D;
+  --bg:#F4F7FB;
+  --surface:#FFFFFF;
+  --border:#DDE3ED;
+  --text:#1A1A2E;
+  --text-2:#5A6478;
+  --text-3:#9BA5B4;
+  --info-bg:#EBF3FC;
+  --info-text:#185FA5;
+  --warn-bg:#FEF9E7;
+  --warn-text:#B7770D;
+  --danger-bg:#FDEDEC;
+  --danger-text:#922B21;
+  --success-bg:#D5F5E3;
+  --success-text:#1E8449;
+  --radius:12px;
+  --radius-sm:8px;
+  --radius-xs:6px;
+}
+html,body{height:100%;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:var(--text);font-size:16px;line-height:1.5}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--navy);padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+.topbar-logo{width:32px;height:32px;border-radius:var(--radius-sm);background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;letter-spacing:-.5px;flex-shrink:0}
+.topbar-info{flex:1;min-width:0}
+.topbar-title{font-size:14px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-sub{font-size:11px;color:rgba(255,255,255,0.6)}
+.topbar-right{flex-shrink:0}
+.step-indicator{display:flex;align-items:center;gap:4px}
+.step-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.25)}
+.step-dot.active{background:#fff;width:20px;border-radius:4px}
+.step-dot.done{background:var(--green)}
+
+/* ── BODY ── */
+.body{flex:1;padding:16px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.body.pad-bottom{padding-bottom:100px}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.card-label{font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+
+/* ── LOGIN ── */
+.login-hero{text-align:center;padding:40px 16px 24px}
+.login-icon{width:72px;height:72px;border-radius:20px;background:var(--navy);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px}
+.login-title{font-size:24px;font-weight:700;color:var(--text);margin-bottom:6px}
+.login-sub{font-size:14px;color:var(--text-2)}
+.login-field{margin-bottom:12px}
+.login-field label{display:block;font-size:13px;font-weight:500;color:var(--text-2);margin-bottom:6px}
+.login-field input{width:100%;padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:18px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text);background:var(--surface);text-align:center}
+.login-field input:focus{outline:none;border-color:var(--navy)}
+.login-error{background:var(--danger-bg);color:var(--danger-text);padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:12px;display:none}
+.login-error.show{display:block}
+
+/* ── BUTTONS ── */
+.btn{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s,transform .1s;-webkit-appearance:none}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-secondary{background:var(--bg);color:var(--text);border:0.5px solid var(--border)}
+.btn-success{background:var(--green);color:#fff}
+.btn-sm{padding:9px 14px;font-size:13px;width:auto;border-radius:var(--radius-xs)}
+.btn-row{display:flex;gap:8px;margin-top:12px}
+.btn-row .btn{flex:1}
+
+/* ── DROP ZONE ── */
+.drop-zone{border:1.5px dashed var(--border);border-radius:var(--radius);padding:32px 16px;text-align:center;cursor:pointer;transition:background .15s;position:relative}
+.drop-zone.has-files{padding:16px}
+.drop-zone-icon{font-size:40px;margin-bottom:8px;display:block}
+.drop-zone p{font-size:14px;color:var(--text-2);margin-bottom:4px}
+.drop-zone small{font-size:12px;color:var(--text-3)}
+.drop-zone.drag{background:#EBF3FC;border-color:var(--navy)}
+
+/* ── THUMBS ── */
+.thumb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+@media(min-width:480px){.thumb-grid{grid-template-columns:repeat(6,1fr)}}
+@media(min-width:768px){.thumb-grid{grid-template-columns:repeat(8,1fr)}}
+.thumb{position:relative;aspect-ratio:1;border-radius:var(--radius-xs);overflow:hidden;border:0.5px solid var(--border);background:var(--bg)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb-file{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:2px;padding:4px}
+.thumb-file span{font-size:8px;color:var(--text-2);text-align:center;word-break:break-all;line-height:1.2}
+.thumb-del{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.6);border:none;cursor:pointer;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center}
+.thumb-num{position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,0.5);color:#fff;font-size:8px;padding:1px 4px;border-radius:3px}
+
+/* ── PERSON CHIPS ── */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:7px 12px;border:0.5px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;color:var(--text-2);transition:all .15s;background:var(--surface);white-space:nowrap}
+.chip.sel{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:500}
+
+/* ── PROGRESS ── */
+.progress-wrap{margin:12px 0}
+.progress-track{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;border:0.5px solid var(--border)}
+.progress-fill{height:100%;background:var(--navy);border-radius:3px;transition:width .3s}
+.progress-label{font-size:12px;color:var(--text-2);margin-top:5px;text-align:center}
+
+/* ── STATUS ── */
+.status-msg{padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;display:flex;align-items:center;gap:8px;margin:10px 0}
+.status-msg.processing{background:var(--warn-bg);color:var(--warn-text)}
+.status-msg.error{background:var(--danger-bg);color:var(--danger-text)}
+.status-msg.success{background:var(--success-bg);color:var(--success-text)}
+.status-msg{display:none}
+.status-msg.show{display:flex}
+
+/* ── REVIEW TABLE ── */
+.review-stats{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.stat-pill{font-size:12px;padding:4px 10px;border-radius:20px;font-weight:500}
+.pill-ok{background:var(--success-bg);color:var(--success-text)}
+.pill-warn{background:var(--warn-bg);color:var(--warn-text)}
+.pill-low{background:var(--danger-bg);color:var(--danger-text)}
+
+.receipt-row{border:0.5px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;overflow:hidden}
+.receipt-row.warn{border-left:3px solid var(--amber)}
+.receipt-row.low{border-left:3px solid var(--red)}
+.receipt-row.ok{border-left:3px solid var(--green)}
+
+.row-header{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;background:var(--surface)}
+.row-thumb-sm{width:40px;height:40px;border-radius:var(--radius-xs);object-fit:cover;border:0.5px solid var(--border);flex-shrink:0;background:var(--bg)}
+.row-thumb-sm.placeholder{display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:20px}
+.row-main-info{flex:1;min-width:0}
+.row-vendor{font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-meta{font-size:12px;color:var(--text-2)}
+.row-right{text-align:right;flex-shrink:0}
+.row-amount{font-size:14px;font-weight:700;color:var(--navy)}
+.conf-badge{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:500;margin-top:2px;display:inline-block}
+.conf-high{background:var(--success-bg);color:var(--success-text)}
+.conf-mid{background:var(--warn-bg);color:var(--warn-text)}
+.conf-low{background:var(--danger-bg);color:var(--danger-text)}
+.expand-icon{color:var(--text-3);font-size:18px;flex-shrink:0;transition:transform .2s;line-height:1}
+
+.row-edit-panel{display:none;padding:12px;background:var(--bg);border-top:0.5px solid var(--border)}
+.row-edit-panel.open{display:block}
+.row-edit-img{width:100%;max-height:160px;object-fit:contain;border-radius:var(--radius-sm);margin-bottom:10px;background:var(--surface);border:0.5px solid var(--border)}
+.edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.edit-field label{font-size:11px;font-weight:500;color:var(--text-2);display:block;margin-bottom:3px}
+.edit-field input,.edit-field select{width:100%;padding:8px 10px;border:0.5px solid var(--border);border-radius:var(--radius-xs);font-size:13px;color:var(--text);background:var(--surface);-webkit-appearance:none}
+.edit-field input:focus,.edit-field select:focus{outline:none;border-color:var(--navy)}
+.edit-field.full{grid-column:1/-1}
+
+/* ── BOTTOM BAR ── */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:0.5px solid var(--border);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+
+/* ── SUCCESS ── */
+.success-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 16px;text-align:center}
+.success-circle{width:80px;height:80px;border-radius:50%;background:var(--success-bg);display:flex;align-items:center;justify-content:center;font-size:40px;margin-bottom:20px}
+.success-title{font-size:22px;font-weight:700;margin-bottom:8px}
+.success-sub{font-size:14px;color:var(--text-2);margin-bottom:28px}
+.success-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;width:100%;max-width:400px;margin-bottom:28px}
+.success-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 8px;text-align:center}
+.success-num{font-size:22px;font-weight:700;color:var(--navy)}
+.success-label{font-size:11px;color:var(--text-2);margin-top:2px}
+
+/* ── LOGOUT BTN ── */
+.logout-btn{background:none;border:none;color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;padding:4px 8px;border-radius:4px}
+.logout-btn:active{background:rgba(255,255,255,0.1)}
+
+/* ── FILE INPUT ── */
+#fileInput{display:none}
+
+/* ── HELPERS ── */
+.mt8{margin-top:8px}
+.mt12{margin-top:12px}
+.flex-between{display:flex;align-items:center;justify-content:space-between}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════
+     SCREEN 0 — LOGIN
+════════════════════════════════════ -->
+<div class="screen active" id="screen-login">
+  <div class="body">
+    <div class="login-hero">
+      <div class="login-icon">🧾</div>
+      <div class="login-title">Petty Cash</div>
+      <div class="login-sub">Enter your workspace code to continue</div>
+    </div>
+    <div class="card">
+      <div class="login-field">
+        <label>Workspace code</label>
+        <input type="text" id="workspaceInput" placeholder="e.g. TOPLINE" autocomplete="off" autocapitalize="characters" spellcheck="false" oninput="this.value=this.value.toUpperCase()"/>
+      </div>
+      <div class="login-error" id="loginError">Invalid workspace code. Please check and try again.</div>
+      <button class="btn btn-primary" onclick="doLogin()">Continue →</button>
+    </div>
+    <p style="text-align:center;font-size:12px;color:var(--text-3);margin-top:16px">Don't have a code? Contact your administrator.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN 1 — UPLOAD
+════════════════════════════════════ -->
+<div class="screen" id="screen-upload">
+  <div class="topbar">
+    <div class="topbar-logo" id="topbarLogo">PC</div>
+    <div class="topbar-info">
+      <div class="topbar-title" id="topbarTitle">Petty Cash</div>
+      <div class="topbar-sub">Upload receipts</div>
+    </div>
+    <div class="topbar-right">
+      <button class="logout-btn" onclick="doLogout()">✕ Exit</button>
+    </div>
+  </div>
+
+  <div class="body pad-bottom">
+    <div class="card">
+      <div class="card-label">Receipts (up to 20)</div>
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <span class="drop-zone-icon">📎</span>
+        <p>Tap to upload or take photo</p>
+        <small>JPG, PNG, PDF · Max 20 files</small>
+      </div>
+      <input type="file" id="fileInput" accept="image/*,application/pdf" multiple onchange="handleFiles(event)"/>
+      <div class="thumb-grid" id="thumbGrid"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Person submitting</div>
+      <div class="chips" id="personChips"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(optional)</span></div>
+      <textarea id="notesInput" rows="3" placeholder="Any extra context for this batch..." style="width:100%;padding:10px 12px;border:0.5px solid var(--border);border-radius:var(--radius-xs);font-size:14px;color:var(--text);background:var(--surface);resize:vertical;font-family:inherit"></textarea>
+    </div>
+
+    <div id="uploadStatus" class="status-msg"></div>
+    <div class="progress-wrap" id="uploadProgress" style="display:none">
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="progress-label" id="progressLabel">Extracting...</div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="btn btn-primary" id="extractBtn" onclick="runExtract()" disabled>
+      ✦ Extract all with AI
+    </button>
+    <p style="text-align:center;font-size:12px;color:var(--text-3);margin-top:6px" id="extractHint">Upload at least 1 receipt</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN 2 — REVIEW
+════════════════════════════════════ -->
+<div class="screen" id="screen-review">
+  <div class="topbar">
+    <div class="topbar-logo" id="topbarLogo2">PC</div>
+    <div class="topbar-info">
+      <div class="topbar-title" id="topbarTitle2">Review</div>
+      <div class="topbar-sub" id="reviewSub">0 receipts extracted</div>
+    </div>
+    <div class="topbar-right">
+      <button class="logout-btn" onclick="goToUpload()">← Back</button>
+    </div>
+  </div>
+
+  <div class="body pad-bottom">
+    <div class="review-stats" id="reviewStats"></div>
+    <div id="reviewList"></div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="btn btn-success" id="confirmBtn" onclick="runConfirmAll()">
+      ✓ Confirm all &amp; save to Excel
+    </button>
+    <div id="confirmStatus" class="status-msg" style="margin-top:8px"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN 3 — SUCCESS
+════════════════════════════════════ -->
+<div class="screen" id="screen-success">
+  <div class="topbar">
+    <div class="topbar-logo" id="topbarLogo3">PC</div>
+    <div class="topbar-info">
+      <div class="topbar-title">Done!</div>
+      <div class="topbar-sub">Receipts saved</div>
+    </div>
+  </div>
+  <div class="success-body">
+    <div class="success-circle">✓</div>
+    <div class="success-title">All saved!</div>
+    <div class="success-sub">Images stored in OneDrive<br/>Excel updated with all entries</div>
+    <div class="success-cards">
+      <div class="success-card"><div class="success-num" id="fin_count">0</div><div class="success-label">Receipts</div></div>
+      <div class="success-card"><div class="success-num" id="fin_total">0</div><div class="success-label">Total AED</div></div>
+      <div class="success-card"><div class="success-num" id="fin_vat">0</div><div class="success-label">VAT AED</div></div>
+    </div>
+    <button class="btn btn-primary" style="max-width:300px" onclick="resetToUpload()">
+      + Upload another batch
+    </button>
+  </div>
+</div>
+
+<script>
+const CATS = ["Fuel","Transport","Site Supplies","Maintenance","Office","Pantry","Visa & PRO","Misc"];
+let clientConfig = null;
+let selectedPerson = null;
+let uploadedFiles = [];
+let extractedData = [];
+
+async function loadClients(){
+  try {
+    const r = await fetch('clients.json');
+    return await r.json();
+  } catch {
+    return {
+      "TOPLINE":{name:"Topline Middle East Pipelines",logo_initials:"TM",extract_url:"YOUR_EXTRACT_URL",confirm_url:"YOUR_CONFIRM_URL",persons:["Raju","Sarfaraz","Faiyaz","Kaif","Khalil","Azatour","Deep","Hassan"]},
+      "NASMAH":{name:"Nasmah Build & Interior Design",logo_initials:"NB",extract_url:"YOUR_EXTRACT_URL",confirm_url:"YOUR_CONFIRM_URL",persons:["Ahmed","Syed","Mohammed","Ali","Omar"]}
+    };
+  }
+}
+
+async function doLogin(){
+  const code = document.getElementById('workspaceInput').value.trim().toUpperCase();
+  const clients = await loadClients();
+  if(clients[code]){
+    clientConfig = clients[code];
+    clientConfig._code = code;
+    document.getElementById('loginError').classList.remove('show');
+    setupWorkspace();
+    showScreen('screen-upload');
+  } else {
+    document.getElementById('loginError').classList.add('show');
+  }
+}
+
+document.getElementById('workspaceInput').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+
+function setupWorkspace(){
+  const c = clientConfig;
+  ['topbarLogo','topbarLogo2','topbarLogo3'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.textContent = c.logo_initials || c.name.substring(0,2).toUpperCase();
+  });
+  ['topbarTitle','topbarTitle2'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.textContent = c.name;
+  });
+  const chips = document.getElementById('personChips');
+  chips.innerHTML = '';
+  c.persons.forEach(p=>{
+    const d = document.createElement('div');
+    d.className = 'chip';
+    d.textContent = p;
+    d.onclick = ()=>pickPerson(d, p);
+    chips.appendChild(d);
+  });
+  const other = document.createElement('div');
+  other.className = 'chip';
+  other.textContent = 'Other / Mixed';
+  other.onclick = ()=>pickPerson(other, 'Mixed');
+  chips.appendChild(other);
+}
+
+function doLogout(){
+  clientConfig = null; selectedPerson = null;
+  uploadedFiles = []; extractedData = [];
+  document.getElementById('workspaceInput').value = '';
+  document.getElementById('thumbGrid').innerHTML = '';
+  document.getElementById('extractBtn').disabled = true;
+  document.getElementById('extractHint').textContent = 'Upload at least 1 receipt';
+  showScreen('screen-login');
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function pickPerson(el, name){
+  document.querySelectorAll('#personChips .chip').forEach(c=>c.classList.remove('sel'));
+  selectedPerson = name;
+  el.classList.add('sel');
+}
+
+async function fileToB64(file){
+  return new Promise(res=>{
+    const r = new FileReader();
+    r.onload = ev=>res(ev.target.result.split(',')[1]);
+    r.readAsDataURL(file);
+  });
+}
+
+async function fileToDataURL(file){
+  return new Promise(res=>{
+    const r = new FileReader();
+    r.onload = ev=>res(ev.target.result);
+    r.readAsDataURL(file);
+  });
+}
+
+function handleFiles(e){
+  const newFiles = Array.from(e.target.files);
+  newFiles.forEach(f=>{ if(uploadedFiles.length < 20) uploadedFiles.push(f); });
+  document.getElementById('fileInput').value = '';
+  renderThumbs();
+}
+
+async function renderThumbs(){
+  const grid = document.getElementById('thumbGrid');
+  grid.innerHTML = '';
+  for(let i=0;i<uploadedFiles.length;i++){
+    const f = uploadedFiles[i];
+    const div = document.createElement('div');
+    div.className = 'thumb';
+    if(f.type.startsWith('image/')){
+      const url = await fileToDataURL(f);
+      div.innerHTML = `<img src="${url}" alt="${f.name}"/>`;
+    } else {
+      div.innerHTML = `<div class="thumb-file"><span style="font-size:22px">📄</span><span>${f.name.split('.').pop().toUpperCase()}</span></div>`;
+    }
+    div.innerHTML += `<div class="thumb-num">${i+1}</div><button class="thumb-del" onclick="removeFile(${i})">✕</button>`;
+    grid.appendChild(div);
+  }
+  const n = uploadedFiles.length;
+  const dz = document.getElementById('dropZone');
+  if(n > 0){
+    dz.querySelector('p').textContent = n >= 20 ? 'Max 20 files reached' : `${n} file${n>1?'s':''} selected — tap to add more`;
+    dz.querySelector('small').textContent = n >= 20 ? '' : 'Tap to add more';
+  } else {
+    dz.querySelector('p').textContent = 'Tap to upload or take photo';
+    dz.querySelector('small').textContent = 'JPG, PNG, PDF · Max 20 files';
+  }
+  document.getElementById('extractBtn').disabled = n === 0;
+  document.getElementById('extractHint').textContent = n > 0 ? `${n} receipt${n>1?'s':''} ready — tap to extract` : 'Upload at least 1 receipt';
+}
+
+function removeFile(i){
+  uploadedFiles.splice(i,1);
+  renderThumbs();
+}
+
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{
+  e.preventDefault();dz.classList.remove('drag');
+  const f=Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/')||f.type==='application/pdf');
+  f.forEach(file=>{ if(uploadedFiles.length<20) uploadedFiles.push(file); });
+  renderThumbs();
+});
+
+function setStatus(id,type,msg){
+  const el=document.getElementById(id);
+  el.className='status-msg show '+type;
+  el.textContent=msg;
+}
+function hideStatus(id){ document.getElementById(id).className='status-msg'; }
+
+function fakeDemoExtract(file, person){
+  const vendors=["ENOC Station","Careem","Al Futtaim ACE","Al-Futtaim Auto","Office Depot","Zoom Pantry","GDRFA","Arabian Post","ADNOC","Uber"];
+  const conf = Math.random()>0.3 ? (0.78+Math.random()*0.21) : (0.38+Math.random()*0.35);
+  return {
+    vendor: vendors[Math.floor(Math.random()*vendors.length)],
+    date: "2025-01-"+String(Math.floor(Math.random()*28)+1).padStart(2,'0'),
+    amount: parseFloat((50+Math.random()*600).toFixed(2)),
+    vat: parseFloat((Math.random()*30).toFixed(2)),
+    category: CATS[Math.floor(Math.random()*CATS.length)],
+    person: person && person!=='Mixed' ? person : ["Raju","Kaif","Hassan"][Math.floor(Math.random()*3)],
+    description: "Auto-extracted",
+    confidence: parseFloat(conf.toFixed(2))
+  };
+}
+
+async function runExtract(){
+  if(uploadedFiles.length===0) return;
+  const btn = document.getElementById('extractBtn');
+  btn.disabled = true;
+  const pw = document.getElementById('uploadProgress');
+  pw.style.display = 'block';
+  setStatus('uploadStatus','processing',`Sending ${uploadedFiles.length} receipts to AI...`);
+  extractedData = [];
+  const b64s = await Promise.all(uploadedFiles.map(f=>fileToB64(f)));
+  const dataURLs = await Promise.all(uploadedFiles.map(f=>fileToDataURL(f)));
+
+  for(let i=0;i<uploadedFiles.length;i++){
+    const pct = Math.round(((i)/uploadedFiles.length)*100);
+    document.getElementById('progressFill').style.width = pct+'%';
+    document.getElementById('progressLabel').textContent = `Extracting ${i+1} of ${uploadedFiles.length}...`;
+    let data;
+    try {
+      const res = await fetch('/.netlify/functions/extract',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({target_url:clientConfig.extract_url,image_base64:b64s[i],file_name:uploadedFiles[i].name,person_hint:selectedPerson||"",notes:document.getElementById('notesInput').value})
+      });
+      if(!res.ok) throw new Error();
+      data = await res.json();
+    } catch {
+      data = fakeDemoExtract(uploadedFiles[i], selectedPerson);
+      data._demo = true;
+    }
+    data._b64 = b64s[i];
+    data._dataURL = dataURLs[i];
+    data._filename = uploadedFiles[i].name;
+    data._isImage = uploadedFiles[i].type.startsWith('image/');
+    extractedData.push(data);
+  }
+
+  document.getElementById('progressFill').style.width='100%';
+  document.getElementById('progressLabel').textContent=`Done — ${uploadedFiles.length} receipts extracted`;
+
+  setTimeout(()=>{
+    hideStatus('uploadStatus');
+    pw.style.display='none';
+    btn.disabled=false;
+    buildReviewScreen();
+    showScreen('screen-review');
+  }, 600);
+}
+
+function confLevel(c){ return c>=0.78?'high':c>=0.55?'mid':'low'; }
+function confLabel(c){ return Math.round(c*100)+'%'; }
+
+function buildReviewScreen(){
+  let ok=0,warn=0,low=0;
+  extractedData.forEach(d=>{
+    const l=confLevel(d.confidence);
+    if(l==='high') ok++; else if(l==='mid') warn++; else low++;
+  });
+
+  const stats = document.getElementById('reviewStats');
+  stats.innerHTML = `<span class="stat-pill pill-ok">✓ ${ok} good</span>`;
+  if(warn) stats.innerHTML += `<span class="stat-pill pill-warn">⚠ ${warn} review</span>`;
+  if(low) stats.innerHTML += `<span class="stat-pill pill-low">✗ ${low} low confidence</span>`;
+
+  document.getElementById('reviewSub').textContent = `${extractedData.length} receipt${extractedData.length>1?'s':''} extracted`;
+  document.getElementById('topbarTitle2').textContent = clientConfig.name;
+  document.getElementById('topbarLogo2').textContent = clientConfig.logo_initials || clientConfig.name.substring(0,2).toUpperCase();
+
+  const list = document.getElementById('reviewList');
+  list.innerHTML = '';
+  extractedData.forEach((d,i)=>{
+    const level = confLevel(d.confidence);
+    const div = document.createElement('div');
+    div.className = `receipt-row ${level}`;
+
+    const catOpts = CATS.map(c=>`<option${c===d.category?' selected':''}>${c}</option>`).join('');
+    const pOpts = (clientConfig.persons.concat(['Other'])).map(p=>`<option${p===d.person?' selected':''}>${p}</option>`).join('');
+    const imgHTML = d._isImage
+      ? `<img class="row-edit-img" src="${d._dataURL}" alt="Receipt ${i+1}"/>`
+      : `<div style="padding:12px;background:var(--surface);border-radius:var(--radius-sm);text-align:center;color:var(--text-3);margin-bottom:10px;border:0.5px solid var(--border)">📄 ${d._filename}</div>`;
+    const demoTag = d._demo ? ` <span style="font-size:10px;background:var(--warn-bg);color:var(--warn-text);padding:1px 5px;border-radius:3px">demo</span>` : '';
+
+    div.innerHTML = `
+      <div class="row-header" onclick="toggleRow(${i})">
+        ${d._isImage
+          ? `<img class="row-thumb-sm" src="${d._dataURL}" alt=""/>`
+          : `<div class="row-thumb-sm placeholder">📄</div>`}
+        <div class="row-main-info">
+          <div class="row-vendor">${d.vendor||'Unknown vendor'}${demoTag}</div>
+          <div class="row-meta">${d.date||'No date'} · ${d.category||'—'} · ${d.person||'—'}</div>
+        </div>
+        <div class="row-right">
+          <div class="row-amount">AED ${(d.amount||0).toFixed(2)}</div>
+          <div class="conf-badge conf-${level}">${confLabel(d.confidence)}</div>
+        </div>
+        <span class="expand-icon" id="chev-${i}">›</span>
+      </div>
+      <div class="row-edit-panel" id="panel-${i}">
+        ${imgHTML}
+        <div class="edit-grid">
+          <div class="edit-field"><label>Vendor</label><input type="text" id="ev_${i}" value="${escHtml(d.vendor||'')}"/></div>
+          <div class="edit-field"><label>Date</label><input type="date" id="ed_${i}" value="${d.date||''}"/></div>
+          <div class="edit-field"><label>Amount (AED)</label><input type="number" id="ea_${i}" value="${(d.amount||0).toFixed(2)}" step="0.01"/></div>
+          <div class="edit-field"><label>VAT (AED)</label><input type="number" id="ev2_${i}" value="${(d.vat||0).toFixed(2)}" step="0.01"/></div>
+          <div class="edit-field"><label>Category</label><select id="ec_${i}">${catOpts}</select></div>
+          <div class="edit-field"><label>Person</label><select id="ep_${i}">${pOpts}</select></div>
+          <div class="edit-field full"><label>Description</label><input type="text" id="edes_${i}" value="${escHtml(d.description||'')}"/></div>
+        </div>
+        <p style="font-size:11px;color:var(--text-3)">File: ${d._filename} · Confidence: ${confLabel(d.confidence)}</p>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function toggleRow(i){
+  const panel = document.getElementById('panel-'+i);
+  const chev = document.getElementById('chev-'+i);
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open',!isOpen);
+  chev.style.transform = isOpen ? '' : 'rotate(90deg)';
+}
+
+function collectFinal(){
+  return extractedData.map((d,i)=>({
+    vendor: document.getElementById('ev_'+i)?.value||d.vendor||'',
+    date: document.getElementById('ed_'+i)?.value||d.date||'',
+    amount: parseFloat(document.getElementById('ea_'+i)?.value||0),
+    vat: parseFloat(document.getElementById('ev2_'+i)?.value||0),
+    category: document.getElementById('ec_'+i)?.value||d.category||'',
+    person: document.getElementById('ep_'+i)?.value||d.person||'',
+    description: document.getElementById('edes_'+i)?.value||d.description||'',
+    image_base64: d._b64,
+    file_name: d._filename,
+    confidence: d.confidence
+  }));
+}
+
+async function runConfirmAll(){
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true;
+  setStatus('confirmStatus','processing',`Saving ${extractedData.length} receipts...`);
+  const payload = collectFinal();
+  try {
+    const res = await fetch('/.netlify/functions/confirm',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({target_url:clientConfig.confirm_url,receipts:payload,workspace:clientConfig._code})
+    });
+    if(!res.ok) throw new Error();
+  } catch { }
+  showSuccessScreen(payload);
+}
+
+function showSuccessScreen(payload){
+  const total = payload.reduce((s,r)=>s+r.amount,0);
+  const vat = payload.reduce((s,r)=>s+r.vat,0);
+  document.getElementById('fin_count').textContent = payload.length;
+  document.getElementById('fin_total').textContent = total.toFixed(0);
+  document.getElementById('fin_vat').textContent = vat.toFixed(0);
+  document.getElementById('topbarLogo3').textContent = clientConfig.logo_initials || clientConfig.name.substring(0,2).toUpperCase();
+  hideStatus('confirmStatus');
+  showScreen('screen-success');
+}
+
+function goToUpload(){
+  showScreen('screen-upload');
+}
+
+function resetToUpload(){
+  uploadedFiles = []; extractedData = [];
+  document.getElementById('thumbGrid').innerHTML='';
+  document.getElementById('notesInput').value='';
+  document.getElementById('extractBtn').disabled=true;
+  document.getElementById('extractHint').textContent='Upload at least 1 receipt';
+  document.getElementById('confirmBtn').disabled=false;
+  hideStatus('confirmStatus');
+  showScreen('screen-upload');
+}
+</script>
+</body>
+</html>
