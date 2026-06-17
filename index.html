@@ -569,7 +569,7 @@ function buildReviewScreen(){
           : `<div class="row-thumb-sm placeholder">📄</div>`}
         <div class="row-main-info">
           <div class="row-vendor">${d.vendor||'Unknown vendor'}${demoTag}</div>
-          <div class="row-meta">${d.date||'No date'} · ${d.category||'—'} · ${d.person||'—'}</div>
+          <div class="row-meta">${d.date||'No date'} · ${d.category||'—'} · ${d.person||'—'}${d.invoice_number ? ' · Inv# '+d.invoice_number : ''}</div>
         </div>
         <div class="row-right">
           <div class="row-amount">AED ${(d.amount||0).toFixed(2)}</div>
@@ -581,6 +581,7 @@ function buildReviewScreen(){
         ${imgHTML}
         <div class="edit-grid">
           <div class="edit-field"><label>Vendor</label><input type="text" id="ev_${i}" value="${escHtml(d.vendor||'')}"/></div>
+          <div class="edit-field"><label>Invoice Number</label><input type="text" id="einv_${i}" value="${escHtml(d.invoice_number||'')}"/></div>
           <div class="edit-field"><label>Date</label><input type="date" id="ed_${i}" value="${d.date||''}"/></div>
           <div class="edit-field"><label>Amount (AED)</label><input type="number" id="ea_${i}" value="${(d.amount||0).toFixed(2)}" step="0.01"/></div>
           <div class="edit-field"><label>VAT (AED)</label><input type="number" id="ev2_${i}" value="${(d.vat||0).toFixed(2)}" step="0.01"/></div>
@@ -607,6 +608,7 @@ function toggleRow(i){
 function collectFinal(){
   return extractedData.map((d,i)=>({
     vendor: document.getElementById('ev_'+i)?.value||d.vendor||'',
+    invoice_number: document.getElementById('einv_'+i)?.value||d.invoice_number||'',
     date: document.getElementById('ed_'+i)?.value||d.date||'',
     amount: parseFloat(document.getElementById('ea_'+i)?.value||0),
     vat: parseFloat(document.getElementById('ev2_'+i)?.value||0),
