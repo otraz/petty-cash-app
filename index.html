@@ -502,7 +502,7 @@ async function runExtract(){
       const res = await fetch('/.netlify/functions/extract',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({target_url:clientConfig.extract_url,image_base64:b64s[i],file_name:uploadedFiles[i].name,person_hint:selectedPerson||"",notes:document.getElementById('notesInput').value})
+        body:JSON.stringify({workspace:clientConfig._code,image_base64:b64s[i],file_name:uploadedFiles[i].name,person_hint:selectedPerson||"",notes:document.getElementById('notesInput').value})
       });
       if(!res.ok) throw new Error();
       data = await res.json();
@@ -630,7 +630,7 @@ async function runConfirmAll(){
     const res = await fetch('/.netlify/functions/confirm',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({target_url:clientConfig.confirm_url,receipts:payload,workspace:clientConfig._code})
+      body:JSON.stringify({receipts:payload,workspace:clientConfig._code})
     });
     if(!res.ok) throw new Error();
   } catch { }
