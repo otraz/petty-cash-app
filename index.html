@@ -465,7 +465,36 @@ function setStatus(id,type,msg){
   el.className='status-msg show '+type;
   el.textContent=msg;
 }
-function hideStatus(id){ document.getElementById(id).className='status-msg'; }      const LEDGERS = [       ["50102021","Fuel __others","Project Direct Costs"],       ["50202009","Visa expenses","Administrative Expenses"],       ["50102002","Food Expenses __Project","Project Direct Costs"],       ["50202017","Insurance Expense __Indirect","Administrative Expenses"],       ["50202015","Meals & Pantry","Administrative Expenses"],       ["50202002","Printing and stationery","Administrative Expenses"],       ["50102027","TOLLS CHARGES/Parking Charges","Project Direct Costs"],       ["50102012","Office Supplies__Project","Project Direct Costs"],       ["50102024","Vehicle Maintenance/Cost__Office","Project Direct Costs"],       ["50102003","Transportation__Project","Project Direct Costs"],       ["50202008","Travel & Hotel Cost","Administrative Expenses"],       ["50202014","Fuel","Administrative Expenses"],       ["50103002","Customs duty","Project Direct Costs"],       ["50202005","AMC for IT Systems and Software","Administrative Expenses"],       ["10202001","Office Equipment (Cost)","Fixed Assets"],       ["50202003","Telephone/Internet and fax","Administrative Expenses"],       ["50202023","Medical Expenses__Admin","Administrative Expenses"],       ["50102011","Accomodation Expenses __project","Project Direct Costs"],       ["50103001","Freight","Project Direct Costs"],       ["10201002","Plant and Machinery (Cost)","Fixed Assets"],       ["50202011","License and registration","Administrative Expenses"],       ["50202019","Miscellaneous expenses","Administrative Expenses"],       ["10104003","Refundable Deposits","Current Assets"],       ["50202012","Professional fees","Administrative Expenses"],       ["10106001","Advance To Staff","Current Assets"],       ["50102006","Bonus___Project","Project Direct Costs"]     ];      const LEDGERS = [       ["50102021","Fuel __others","Project Direct Costs"],       ["50202009","Visa expenses","Administrative Expenses"],       ["50102002","Food Expenses __Project","Project Direct Costs"],       ["50202017","Insurance Expense __Indirect","Administrative Expenses"],       ["50202015","Meals & Pantry","Administrative Expenses"],       ["50202002","Printing and stationery","Administrative Expenses"],       ["50102027","TOLLS CHARGES/Parking Charges","Project Direct Costs"],       ["50102012","Office Supplies__Project","Project Direct Costs"],       ["50102024","Vehicle Maintenance/Cost__Office","Project Direct Costs"],       ["50102003","Transportation__Project","Project Direct Costs"],       ["50202008","Travel & Hotel Cost","Administrative Expenses"],       ["50202014","Fuel","Administrative Expenses"],       ["50103002","Customs duty","Project Direct Costs"],       ["50202005","AMC for IT Systems and Software","Administrative Expenses"],       ["10202001","Office Equipment (Cost)","Fixed Assets"],       ["50202003","Telephone/Internet and fax","Administrative Expenses"],       ["50202023","Medical Expenses__Admin","Administrative Expenses"],       ["50102011","Accomodation Expenses __project","Project Direct Costs"],       ["50103001","Freight","Project Direct Costs"],       ["10201002","Plant and Machinery (Cost)","Fixed Assets"],       ["50202011","License and registration","Administrative Expenses"],       ["50202019","Miscellaneous expenses","Administrative Expenses"],       ["10104003","Refundable Deposits","Current Assets"],       ["50202012","Professional fees","Administrative Expenses"],       ["10106001","Advance To Staff","Current Assets"],       ["50102006","Bonus___Project","Project Direct Costs"]     ];
+function hideStatus(id){ document.getElementById(id).className='status-msg'; }
+
+    const LEDGERS = [
+      ["50102021","Fuel __others","Project Direct Costs"],
+      ["50202009","Visa expenses","Administrative Expenses"],
+      ["50102002","Food Expenses __Project","Project Direct Costs"],
+      ["50202017","Insurance Expense __Indirect","Administrative Expenses"],
+      ["50202015","Meals & Pantry","Administrative Expenses"],
+      ["50202002","Printing and stationery","Administrative Expenses"],
+      ["50102027","TOLLS CHARGES/Parking Charges","Project Direct Costs"],
+      ["50102012","Office Supplies__Project","Project Direct Costs"],
+      ["50102024","Vehicle Maintenance/Cost__Office","Project Direct Costs"],
+      ["50102003","Transportation__Project","Project Direct Costs"],
+      ["50202008","Travel & Hotel Cost","Administrative Expenses"],
+      ["50202014","Fuel","Administrative Expenses"],
+      ["50103002","Customs duty","Project Direct Costs"],
+      ["50202005","AMC for IT Systems and Software","Administrative Expenses"],
+      ["10202001","Office Equipment (Cost)","Fixed Assets"],
+      ["50202003","Telephone/Internet and fax","Administrative Expenses"],
+      ["50202023","Medical Expenses__Admin","Administrative Expenses"],
+      ["50102011","Accomodation Expenses __project","Project Direct Costs"],
+      ["50103001","Freight","Project Direct Costs"],
+      ["10201002","Plant and Machinery (Cost)","Fixed Assets"],
+      ["50202011","License and registration","Administrative Expenses"],
+      ["50202019","Miscellaneous expenses","Administrative Expenses"],
+      ["10104003","Refundable Deposits","Current Assets"],
+      ["50202012","Professional fees","Administrative Expenses"],
+      ["10106001","Advance To Staff","Current Assets"],
+      ["50102006","Bonus___Project","Project Direct Costs"]
+    ];
 
 function fakeDemoExtract(file, person){
   const vendors=["ENOC Station","Careem","Al Futtaim ACE","Al-Futtaim Auto","Office Depot","Zoom Pantry","GDRFA","Arabian Post","ADNOC","Uber"];
