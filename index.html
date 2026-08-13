@@ -495,6 +495,28 @@ function hideStatus(id){ document.getElementById(id).className='status-msg'; }
       ["10106001","Advance To Staff","Current Assets"],
       ["50102006","Bonus___Project","Project Direct Costs"]
     ];
+  const SITE_OPTIONS = ["Head Office","Project - ASAB","Project - SQM","Other"];
+
+function siteHeadingFilter(site){
+  if(site === "Head Office") return "Administrative Expenses";
+  if(site === "Project - ASAB" || site === "Project - SQM") return "Project Direct Costs";
+  return null;
+}
+
+function buildLedgerOptions(site, selectedCode){
+  const heading = siteHeadingFilter(site);
+  const list = heading ? LEDGERS.filter(l=>l[2]===heading) : LEDGERS;
+  return list.map(l=>`<option value="${l[0]}|${l[1]}|${l[2]}"${l[0]===selectedCode?' selected':''}>${l[0]} - ${l[1]}</option>`).join('');
+}
+
+function onSiteChange(i){
+  const site = document.getElementById('esite_'+i).value;
+  const otherWrap = document.getElementById('esiteOtherWrap_'+i);
+  otherWrap.style.display = site === 'Other' ? 'block' : 'none';
+  const ledgerSel = document.getElementById('ec_'+i);
+  const currentCode = ledgerSel.value.split('|')[0];
+  ledgerSel.innerHTML = buildLedgerOptions(site, currentCode);
+}
 
 function fakeDemoExtract(file, person){
   const vendors=["ENOC Station","Careem","Al Futtaim ACE","Al-Futtaim Auto","Office Depot","Zoom Pantry","GDRFA","Arabian Post","ADNOC","Uber"];
@@ -584,7 +606,10 @@ function buildReviewScreen(){
     const div = document.createElement('div');
     div.className = `receipt-row ${level}`;
 
-    const catOpts = CATS.map(c=>`<option${c===d.category?' selected':''}>${c}</option>`).join('');         const ledgOpts = LEDGERS.map(l=>`<option value="${l[0]}|${l[1]}|${l[2]}"${l[0]===d.ledger_code?' selected':''}>${l[0]} - ${l[1]}</option>`).join('');
+const catOpts = CATS.map(c=>`<option${c===d.category?' selected':''}>${c}</option>`).join('');
+const siteVal = d.site_office || '';
+const siteOpts = SITE_OPTIONS.map(s=>`<option${s===siteVal?' selected':''}>${s}</option>`).join('');
+const ledgOpts = buildLedgerOptions(siteVal, d.ledger_code);
     const pOpts = (clientConfig.persons.concat(['Other'])).map(p=>`<option${p===d.person?' selected':''}>${p}</option>`).join('');
     const imgHTML = d._isImage
       ? `<img class="row-edit-img" src="${d._dataURL}" alt="Receipt ${i+1}"/>`
@@ -614,7 +639,10 @@ function buildReviewScreen(){
           <div class="edit-field"><label>Date</label><input type="date" id="ed_${i}" value="${d.date||''}"/></div>
           <div class="edit-field"><label>Amount (AED)</label><input type="number" id="ea_${i}" value="${(d.amount||0).toFixed(2)}" step="0.01"/></div>
           <div class="edit-field"><label>VAT (AED)</label><input type="number" id="ev2_${i}" value="${(d.vat||0).toFixed(2)}" step="0.01"/></div>
-          <div class="edit-field"><label>Ledger</label><select id="ec_${i}">${ledgOpts}</select></div>
+          <div class="edit-field"><label>Site / Office</label><select id="esite_${i}" onchange="onSiteChange(${i})"><option value=""${siteVal===''?' selected':''}>Select...</option>${siteOpts}</select></div>
+<div class="edit-field full" id="esiteOtherWrap_${i}" style="display:${siteVal==='Other'?'block':'none'}"><label>Site / Office (specify)</label><input type="text" id="esiteOther_${i}" value="${escHtml(d.site_office_other||'')}"/></div>
+<div class="edit-field"><label>Ledger</label><select id="ec_${i}">${ledgOpts}</select></div>
+<div class="edit-field"><label>Person</label><select id="ep_${i}">${pOpts}</select></div>
           <div class="edit-field"><label>Person</label><select id="ep_${i}">${pOpts}</select></div>
           <div class="edit-field full"><label>Description</label><input type="text" id="edes_${i}" value="${escHtml(d.description||'')}"/></div>
         </div>
@@ -635,22 +663,28 @@ function toggleRow(i){
 }
 
 function collectFinal(){
-  return extractedData.map((d,i)=>({
-    vendor: document.getElementById('ev_'+i)?.value||d.vendor||'',
-    invoice_number: document.getElementById('einv_'+i)?.value||d.invoice_number||'',
-    date: document.getElementById('ed_'+i)?.value||d.date||'',
-    amount: parseFloat(document.getElementById('ea_'+i)?.value||0),
-    vat: parseFloat(document.getElementById('ev2_'+i)?.value||0),
-    category: document.getElementById('ec_'+i)?.value||d.category||'',
-    ledger_code: (document.getElementById('ec_'+i)?.value||'').split('|')[0]||d.ledger_code||'',
-   ledger_name: (document.getElementById('ec_'+i)?.value||'').split('|')[1]||d.ledger_name||'',
-   heading: (document.getElementById('ec_'+i)?.value||'').split('|')[2]||d.heading||'',
-    person: document.getElementById('ep_'+i)?.value||d.person||'',
-    description: document.getElementById('edes_'+i)?.value||d.description||'',
-    image_base64: d._b64,
-    file_name: d._filename,
-    confidence: d.confidence
-  }));
+return extractedData.map((d,i)=>{
+const siteSel = document.getElementById('esite_'+i)?.value||'';
+const siteOtherVal = document.getElementById('esiteOther_'+i)?.value||'';
+const siteFinal = siteSel === 'Other' ? (siteOtherVal || 'Other') : siteSel;
+return {
+vendor: document.getElementById('ev_'+i)?.value||d.vendor||'',
+invoice_number: document.getElementById('einv_'+i)?.value||d.invoice_number||'',
+date: document.getElementById('ed_'+i)?.value||d.date||'',
+amount: parseFloat(document.getElementById('ea_'+i)?.value||0),
+vat: parseFloat(document.getElementById('ev2_'+i)?.value||0),
+category: document.getElementById('ec_'+i)?.value||d.category||'',
+ledger_code: (document.getElementById('ec_'+i)?.value||'').split('|')[0]||d.ledger_code||'',
+ledger_name: (document.getElementById('ec_'+i)?.value||'').split('|')[1]||d.ledger_name||'',
+heading: (document.getElementById('ec_'+i)?.value||'').split('|')[2]||d.heading||'',
+person: document.getElementById('ep_'+i)?.value||d.person||'',
+description: document.getElementById('edes_'+i)?.value||d.description||'',
+site_office: siteFinal,
+image_base64: d._b64,
+file_name: d._filename,
+confidence: d.confidence
+};
+});
 }
 
 async function runConfirmAll(){
