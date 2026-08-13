@@ -643,7 +643,6 @@ const ledgOpts = buildLedgerOptions(siteVal, d.ledger_code);
 <div class="edit-field full" id="esiteOtherWrap_${i}" style="display:${siteVal==='Other'?'block':'none'}"><label>Site / Office (specify)</label><input type="text" id="esiteOther_${i}" value="${escHtml(d.site_office_other||'')}"/></div>
 <div class="edit-field"><label>Ledger</label><select id="ec_${i}">${ledgOpts}</select></div>
 <div class="edit-field"><label>Person</label><select id="ep_${i}">${pOpts}</select></div>
-          <div class="edit-field"><label>Person</label><select id="ep_${i}">${pOpts}</select></div>
           <div class="edit-field full"><label>Description</label><input type="text" id="edes_${i}" value="${escHtml(d.description||'')}"/></div>
         </div>
         <p style="font-size:11px;color:var(--text-3)">File: ${d._filename} · Confidence: ${confLabel(d.confidence)}</p>
