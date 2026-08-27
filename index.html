@@ -689,17 +689,32 @@ confidence: d.confidence
 async function runConfirmAll(){
   const btn = document.getElementById('confirmBtn');
   btn.disabled = true;
-  setStatus('confirmStatus','processing',`Saving ${extractedData.length} receipts...`);
   const payload = collectFinal();
-  try {
-    const res = await fetch('/.netlify/functions/confirm',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({receipts:payload,workspace:clientConfig._code})
-    });
-    if(!res.ok) throw new Error();
-  } catch { }
-  showSuccessScreen(payload);
+  const total = payload.length;
+  const saved = [];
+  const failed = [];
+  for (let i = 0; i < payload.length; i++){
+    setStatus('confirmStatus','processing','Saving ' + (i+1) + ' of ' + total + ' receipts...');
+    try {
+      const res = await fetch('/.netlify/functions/confirm',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({receipts:[payload[i]],workspace:clientConfig._code})
+      });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      saved.push(payload[i]);
+    } catch(err){
+      console.error('Confirm failed for receipt', i, err);
+      failed.push(payload[i]);
+    }
+  }
+  if (failed.length){
+    setStatus('confirmStatus','error', saved.length + ' of ' + total + ' saved. ' + failed.length + ' failed to save - please retry.');
+    btn.disabled = false;
+  }
+  if (saved.length){
+    showSuccessScreen(saved);
+  }
 }
 
 function showSuccessScreen(payload){
