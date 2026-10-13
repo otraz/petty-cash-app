@@ -267,6 +267,59 @@ textarea.notes::placeholder{color:var(--text-3)}
 .lightbox.show{display:flex}
 .lightbox img{max-width:100%;max-height:100%;border-radius:10px}
 
+
+/* ── LIGHT THEME for the app screens — on when <body> has class "light"; login always dark ── */
+body.light #screen-upload,body.light #screen-review,body.light #screen-success{
+  --panel:#FFFFFF;
+  --panel-solid:#FFFFFF;
+  --panel-2:#F1F5F4;
+  --line:#E3E9E8;
+  --line-2:#D3DCDA;
+  --text:#14201E;
+  --text-2:#5B6B68;
+  --text-3:#8C9A97;
+  --teal:#1D7A6C;
+  --teal-hi:#1D7A6C;
+  --teal-glow:rgba(29,122,108,.30);
+  --teal-soft:rgba(29,122,108,.10);
+  --amber:#B7770D;
+  --amber-soft:#FDF3E1;
+  --red:#C2413A;
+  --red-soft:#FDECEA;
+  --green:#1E8A5C;
+  --green-soft:#E3F5EC;
+  color:var(--text);
+  background:
+    radial-gradient(800px 400px at 0% 0%, rgba(29,122,108,.08), transparent 60%),
+    #F5F8F7;
+}
+body.light #screen-upload .topbar,body.light #screen-review .topbar,body.light #screen-success .topbar{background:rgba(255,255,255,.88);border-bottom-color:var(--line)}
+body.light #screen-upload .bottom-bar,body.light #screen-review .bottom-bar{background:rgba(255,255,255,.92);border-top-color:var(--line)}
+body.light #screen-upload .card,body.light #screen-review .receipt-row,body.light #screen-review .sum-tile,body.light #screen-success .success-card{box-shadow:0 1px 2px rgba(16,24,40,.04),0 4px 16px -8px rgba(16,24,40,.08)}
+body.light #screen-upload .icon-btn,body.light #screen-review .icon-btn,body.light #screen-success .icon-btn{background:#fff}
+body.light #screen-upload .chip{background:#fff}
+body.light #screen-upload .chip.sel{background:var(--teal);border-color:var(--teal);color:#fff}
+body.light #screen-upload .chip.add{background:transparent}
+body.light #screen-upload .chip:not(.sel):not(.add):hover{border-color:#AEBDBA;color:var(--text)}
+body.light #screen-upload .chip .av{background:#EEF3F2}
+body.light #screen-upload .chip.sel .av{background:rgba(255,255,255,.25)}
+body.light #screen-upload .drop-zone{background:linear-gradient(180deg,rgba(29,122,108,.05),rgba(29,122,108,.015));border-color:rgba(29,122,108,.35)}
+body.light #screen-upload textarea.notes,body.light #screen-upload .add-row input,body.light #screen-review .edit-field input,body.light #screen-review .edit-field select{background-color:#fff}
+body.light #screen-review .row-edit-panel{background:#F7FAF9}
+body.light #screen-review .row-header:hover{background:#FAFCFB}
+body.light #screen-review .row-edit-img{background:#EEF2F1}
+body.light #screen-review .edit-field input[type=date]{color-scheme:light}
+body.light .screen:not(#screen-login) .status-msg.processing{color:#8A5A07}
+body.light .screen:not(#screen-login) .status-msg.error{color:#A3302A}
+body.light .screen:not(#screen-login) .status-msg.success{color:#176B47}
+body.light .screen:not(#screen-login) .topbar-logo{color:#fff}
+
+.theme-btn{padding:7px 10px}
+.theme-btn svg{width:15px;height:15px}
+.theme-btn .moon{display:none}
+body.light .theme-btn .sun{display:none}
+body.light .theme-btn .moon{display:block}
+
 /* ── RESPONSIVE ── */
 @media(max-width:860px){
   .login-card{grid-template-columns:1fr}
@@ -364,6 +417,7 @@ textarea.notes::placeholder{color:var(--text-3)}
         <div class="topbar-title" id="topbarTitle">Petty Cash</div>
         <div class="topbar-sub">Petty cash · Upload receipts</div>
       </div>
+      <button class="icon-btn theme-btn" onclick="toggleTheme()" title="Switch light / dark"><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg></button>
       <button class="icon-btn" onclick="doLogout()">Sign out</button>
     </div>
     <div class="stepper">
@@ -444,6 +498,7 @@ textarea.notes::placeholder{color:var(--text-3)}
         <div class="topbar-title" id="topbarTitle2">Review</div>
         <div class="topbar-sub" id="reviewSub">0 receipts extracted</div>
       </div>
+      <button class="icon-btn theme-btn" onclick="toggleTheme()" title="Switch light / dark"><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg></button>
       <button class="icon-btn" onclick="goToUpload()">← Back</button>
     </div>
     <div class="stepper">
@@ -483,6 +538,7 @@ textarea.notes::placeholder{color:var(--text-3)}
         <div class="topbar-title" id="topbarTitle3">Done</div>
         <div class="topbar-sub">Receipts saved</div>
       </div>
+      <button class="icon-btn theme-btn" onclick="toggleTheme()" title="Switch light / dark"><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg></button>
       <button class="icon-btn" onclick="doLogout()">Sign out</button>
     </div>
     <div class="stepper">
@@ -531,6 +587,14 @@ function cleanMoney(el){
   if (v !== el.value) el.value = v;
 }
 
+
+/* ── light / dark theme for the app screens, remembered per device (default light) ── */
+function applyTheme(t){ document.body.classList.toggle('light', t !== 'dark'); }
+function toggleTheme(){
+  const next = document.body.classList.contains('light') ? 'dark' : 'light';
+  applyTheme(next); lsSet('pc_theme', next);
+}
+
 async function loadClients(){
   try {
     const r = await fetch('clients.json', {cache:'no-store'});
@@ -561,6 +625,7 @@ async function doLogin(){
 
 document.getElementById('workspaceInput').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
 document.getElementById('workspaceInput').value = lsGet('pc_last_code', '') || '';
+applyTheme(lsGet('pc_theme', 'light'));
 
 /* ── people: list from clients.json + any added on this device ── */
 function customKey(){ return 'pc_people_' + (clientConfig ? clientConfig._code : ''); }
