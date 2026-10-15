@@ -240,6 +240,23 @@ textarea.notes::placeholder{color:var(--text-3)}
 .edit-field input:focus,.edit-field select:focus{outline:none;border-color:var(--teal-hi);box-shadow:0 0 0 3px var(--teal-soft)}
 .edit-field input[type=date]{color-scheme:dark}
 .edit-field.full{grid-column:1/-1}
+.lcombo{position:relative}
+.lcombo select{display:none}
+.lcombo-input{padding-left:34px !important;padding-right:30px !important;text-overflow:ellipsis}
+.lcombo-ico{position:absolute;left:11px;bottom:12px;width:14px;height:14px;color:var(--text-3);pointer-events:none}
+.lcombo-clear{position:absolute;right:8px;bottom:8px;width:22px;height:22px;border:none;border-radius:6px;background:transparent;color:var(--text-3);cursor:pointer;display:none;font-size:12px}
+.lcombo.open .lcombo-clear{display:block}
+.lcombo-list{position:absolute;left:auto;right:0;width:max(100%,min(440px,calc(100vw - 48px)));top:calc(100% + 6px);z-index:30;max-height:280px;overflow-y:auto;background:var(--panel-solid);border:1px solid var(--line-2);border-radius:var(--radius-xs);box-shadow:0 18px 40px -12px rgba(0,0,0,.35);padding:6px;display:none}
+.lcombo.open .lcombo-list{display:block}
+.lcombo-item{padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px;display:flex;gap:10px;align-items:baseline}
+.lcombo-item .code{font-family:var(--mono);font-size:11.5px;color:var(--text-2);flex-shrink:0}
+.lcombo-item .nm{flex:1;min-width:0}
+.lcombo-item .hd{font-size:10.5px;color:var(--text-3);flex-shrink:0}
+.lcombo-item.act,.lcombo-item:hover{background:var(--teal-soft)}
+.lcombo-item.sel .nm{color:var(--teal-hi);font-weight:600}
+.lcombo-item mark{background:rgba(43,179,156,.25);color:inherit;border-radius:3px;padding:0 1px}
+.lcombo-empty{padding:12px;text-align:center;font-size:12.5px;color:var(--text-3)}
+.receipt-row.combo-open{overflow:visible;z-index:5}
 .money{position:relative}
 .money input{padding-left:46px;font-variant-numeric:tabular-nums}
 .money::before{content:"AED";position:absolute;left:12px;bottom:11px;font-size:10.5px;font-family:var(--mono);color:var(--text-3)}
@@ -298,6 +315,7 @@ body.light #screen-upload .topbar,body.light #screen-review .topbar,body.light #
 body.light #screen-upload .bottom-bar,body.light #screen-review .bottom-bar{background:rgba(255,255,255,.92);border-top-color:var(--line)}
 body.light #screen-upload .card,body.light #screen-review .receipt-row,body.light #screen-review .sum-tile,body.light #screen-success .success-card{box-shadow:0 1px 2px rgba(16,24,40,.04),0 4px 16px -8px rgba(16,24,40,.08)}
 body.light #screen-upload .icon-btn,body.light #screen-review .icon-btn,body.light #screen-success .icon-btn{background:#fff}
+body.light #screen-upload .add-row .icon-btn.go{background:var(--teal);border-color:var(--teal);color:#fff}
 body.light #screen-upload .chip{background:#fff}
 body.light #screen-upload .chip.sel{background:var(--teal);border-color:var(--teal);color:#fff}
 body.light #screen-upload .chip.add{background:transparent}
@@ -838,7 +856,67 @@ function onSiteChange(i){
   const ledgerSel = document.getElementById('ec_'+i);
   const currentCode = ledgerSel.value.split('|')[0];
   ledgerSel.innerHTML = buildLedgerOptions(site, currentCode);
+  syncLedgerInput(i);
   refreshRow(i);
+}
+
+
+/* ── searchable ledger picker (the hidden <select id="ec_i"> stays the source of truth) ── */
+const ledgerState = {};
+function syncLedgerInput(i){
+  const sel = document.getElementById('ec_'+i), inp = document.getElementById('lci_'+i);
+  const o = sel.options[sel.selectedIndex];
+  inp.value = o ? o.text : '';
+}
+function openLedger(i){
+  const inp = document.getElementById('lci_'+i);
+  document.getElementById('lc_'+i).classList.add('open');
+  inp.closest('.receipt-row').classList.add('combo-open');
+  inp.value = '';
+  filterLedger(i, true);
+}
+function closeLedger(i){
+  setTimeout(()=>{
+    const lc = document.getElementById('lc_'+i); if(!lc) return;
+    lc.classList.remove('open');
+    lc.closest('.receipt-row').classList.remove('combo-open');
+    syncLedgerInput(i);
+  }, 120);
+}
+function clearLedgerSearch(i){ const inp=document.getElementById('lci_'+i); inp.value=''; filterLedger(i); inp.focus(); }
+function hl(text, q){
+  const t = escHtml(text); if(!q) return t;
+  const k = t.toLowerCase().indexOf(escHtml(q).toLowerCase());
+  return k < 0 ? t : t.slice(0,k) + '<mark>' + t.slice(k, k+escHtml(q).length) + '</mark>' + t.slice(k+escHtml(q).length);
+}
+function filterLedger(i, scrollToSel){
+  const sel = document.getElementById('ec_'+i);
+  const q = document.getElementById('lci_'+i).value.trim().toLowerCase();
+  const words = q.split(/\s+/).filter(Boolean);
+  const items = Array.from(sel.options).map((o,idx)=>{ const [code,name,head] = o.value.split('|'); return {idx, code, name, head}; })
+    .filter(it => words.every(w => (it.code+' '+it.name+' '+it.head).toLowerCase().includes(w)));
+  ledgerState[i] = {items, act: items.length ? 0 : -1};
+  if (!q){ const k = items.findIndex(it => it.idx === sel.selectedIndex); if (k >= 0) ledgerState[i].act = k; }
+  renderLedgerList(i, q, scrollToSel);
+}
+function renderLedgerList(i, q, scroll){
+  const st = ledgerState[i], list = document.getElementById('lcl_'+i), sel = document.getElementById('ec_'+i);
+  if (!st.items.length){ list.innerHTML = `<div class="lcombo-empty">No ledger matches “${escHtml(q)}”</div>`; return; }
+  list.innerHTML = st.items.map((it,k)=>`<div class="lcombo-item${k===st.act?' act':''}${it.idx===sel.selectedIndex?' sel':''}" onmousedown="event.preventDefault();pickLedger(${i},${it.idx})"><span class="code">${hl(it.code,q)}</span><span class="nm">${hl(it.name,q)}</span><span class="hd">${escHtml((it.head||'').replace(' Expenses','').replace('Project Direct Costs','Project'))}</span></div>`).join('');
+  const a = list.querySelector('.act'); if (a && (scroll !== false)) a.scrollIntoView({block:'nearest'});
+}
+function pickLedger(i, idx){
+  const sel = document.getElementById('ec_'+i);
+  sel.selectedIndex = idx;
+  refreshRow(i);
+  document.getElementById('lci_'+i).blur();
+}
+function ledgerKey(e, i){
+  const st = ledgerState[i]; if(!st) return;
+  if (e.key === 'ArrowDown'){ e.preventDefault(); st.act = Math.min(st.items.length-1, st.act+1); renderLedgerList(i, document.getElementById('lci_'+i).value.trim()); }
+  else if (e.key === 'ArrowUp'){ e.preventDefault(); st.act = Math.max(0, st.act-1); renderLedgerList(i, document.getElementById('lci_'+i).value.trim()); }
+  else if (e.key === 'Enter'){ e.preventDefault(); if (st.act >= 0) pickLedger(i, st.items[st.act].idx); }
+  else if (e.key === 'Escape'){ document.getElementById('lci_'+i).blur(); }
 }
 
 function fakeDemoExtract(file, person){
@@ -979,7 +1057,12 @@ function buildReviewScreen(){
               <div class="edit-field money"><label>Amount</label><input type="text" inputmode="decimal" autocomplete="off" id="ea_${i}" value="${toNum(d.amount).toFixed(2)}" oninput="cleanMoney(this);refreshRow(${i})"/></div>
               <div class="edit-field money"><label>VAT</label><input type="text" inputmode="decimal" autocomplete="off" id="ev2_${i}" value="${toNum(d.vat).toFixed(2)}" oninput="cleanMoney(this);refreshTotals()"/></div>
               <div class="edit-field"><label>Site / office</label><select id="esite_${i}" onchange="onSiteChange(${i})"><option value=""${siteVal===''?' selected':''}>Select…</option>${siteOpts}</select></div>
-              <div class="edit-field"><label>Ledger</label><select id="ec_${i}" onchange="refreshRow(${i})">${ledgOpts}</select></div>
+              <div class="edit-field lcombo" id="lc_${i}"><label>Ledger</label>
+                <svg class="lcombo-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                <input type="text" class="lcombo-input" id="lci_${i}" autocomplete="off" placeholder="Search code or name…" onfocus="openLedger(${i})" oninput="filterLedger(${i})" onkeydown="ledgerKey(event,${i})" onblur="closeLedger(${i})"/>
+                <button type="button" class="lcombo-clear" title="Clear search" onmousedown="event.preventDefault();clearLedgerSearch(${i})">✕</button>
+                <div class="lcombo-list" id="lcl_${i}"></div>
+                <select id="ec_${i}" onchange="refreshRow(${i})">${ledgOpts}</select></div>
               <div class="edit-field full" id="esiteOtherWrap_${i}" style="display:${siteVal==='Other'?'block':'none'}"><label>Site / office (specify)</label><input type="text" id="esiteOther_${i}" value="${escHtml(d.site_office_other||'')}"/></div>
               <div class="edit-field full"><label>Description</label><input type="text" id="edes_${i}" value="${escHtml(d.description||'')}"/></div>
             </div>
@@ -988,6 +1071,7 @@ function buildReviewScreen(){
         </div>
       </div>`;
     list.appendChild(div);
+    syncLedgerInput(i);
     refreshRow(i);
   });
   refreshTotals();
