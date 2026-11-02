@@ -3,5 +3,10 @@
     "name": "Topline Middle East Pipelines",
     "logo_initials": "TM",
     "persons": ["Raju", "Sarfaraz", "Faiyaz", "Kaif", "Khalil", "Azatour", "Deep", "Hassan"]
+  },
+  "SEM2026": {
+    "name": "Sahara Emirates Trading",
+    "logo_initials": "SE",
+    "persons": []
   }
 }
