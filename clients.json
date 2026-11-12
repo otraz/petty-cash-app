@@ -41,20 +41,6 @@
         "label": "Other Cash",
         "code": ""
       }
-    ],
-    "projects": [
-      {
-        "label": "1201 – SEP ASAB",
-        "code": "1201"
-      },
-      {
-        "label": "1202 – SEP SQM",
-        "code": "1202"
-      },
-      {
-        "label": "1204 – SEP P&M",
-        "code": "1204"
-      }
     ]
   },
   "SEM2026": {

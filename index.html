@@ -370,6 +370,12 @@ body.light .theme-btn .moon{display:block}
 .receipt-row.rejected .dup-banner{display:none}
 .rej-banner .icon-btn{pointer-events:auto}
 .thumb-crop{position:absolute;top:4px;left:4px;height:20px;padding:0 6px;border-radius:10px;background:rgba(0,0,0,.65);border:none;cursor:pointer;color:#fff;font-size:10px;display:flex;align-items:center;gap:3px}
+.auto-sw{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text-2);cursor:pointer;user-select:none}
+.auto-sw input{accent-color:var(--teal);width:15px;height:15px;cursor:pointer}
+.card-head-r{display:flex;align-items:center;gap:14px}
+.crop-check{display:inline-flex;align-items:center;gap:7px;color:#ECF2F1;font-size:13px;padding:0 8px;cursor:pointer}
+.crop-check input{accent-color:#2BB39C;width:16px;height:16px}
+.thumb.busy{display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text-3)}
 .thumb-tag{position:absolute;bottom:4px;right:4px;background:var(--teal);color:#fff;font-size:8.5px;font-family:var(--mono);padding:1px 5px;border-radius:4px}
 .img-tools{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .img-tools .icon-btn{padding:6px 11px;font-size:12px}
@@ -508,7 +514,10 @@ body.light .theme-btn .moon{display:block}
     <div class="card">
       <div class="card-head">
         <div class="card-label"><span class="n">1</span>Receipts</div>
-        <div class="card-meta" id="fileCount">0 / 20</div>
+        <div class="card-head-r">
+          <label class="auto-sw" title="Automatically cut away the background and clean up photos of bills"><input type="checkbox" id="autoClean" onchange="lsSet('pc_autoclean', this.checked)"/>Auto-crop &amp; clean</label>
+          <div class="card-meta" id="fileCount">0 / 20</div>
+        </div>
       </div>
       <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
         <div class="dz-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg></div>
@@ -543,17 +552,17 @@ body.light .theme-btn .moon{display:block}
 
     <div class="card" id="whereCard">
       <div class="card-head">
-        <div class="card-label"><span class="n">3</span>Cash location &amp; project</div>
+        <div class="card-label"><span class="n">3</span>Project / site</div>
       </div>
-      <div class="sub-label">Where did the cash come from?</div>
+      <div class="sub-label">Which project / site is this bill for?</div>
       <div class="chips small" id="locationChips"></div>
       <div class="add-row" id="addLocRow">
-        <input type="text" id="newLocName" placeholder="Location, e.g. Cash in Project – SEP XYZ" maxlength="60" autocomplete="off"/>
-        <input type="text" id="newLocCode" placeholder="Account code" maxlength="12" autocomplete="off" style="flex:0 0 130px"/>
+        <input type="text" id="newLocName" placeholder="Project / site, e.g. Cash in Project – SEP XYZ" maxlength="60" autocomplete="off"/>
+        <input type="text" id="newLocCode" placeholder="Code" maxlength="12" autocomplete="off" style="flex:0 0 130px"/>
         <button class="icon-btn go" type="button" onclick="saveWhere('loc')">Add</button>
         <button class="icon-btn" type="button" onclick="toggleAddWhere('loc',false)">Cancel</button>
       </div>
-      <div id="projectBlock">
+      <div id="projectBlock" style="display:none">
         <div class="sub-label">Charge to project / site <span class="opt">optional — leave empty for office expenses</span></div>
         <div class="chips small" id="projectChips"></div>
         <div class="add-row" id="addProjRow">
@@ -664,7 +673,7 @@ body.light .theme-btn .moon{display:block}
 
 <div class="crop-modal" id="cropModal">
   <div class="crop-head">
-    <div><span id="cropTitle">Crop bill</span><small id="cropSub">Drag the corners so only the bill is inside the box</small></div>
+    <div><span id="cropTitle">Crop bill</span><small id="cropSub">The box is placed on the bill automatically — drag the corners to adjust</small></div>
     <button class="icon-btn" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#ECF2F1" onclick="closeCrop()">Cancel</button>
   </div>
   <div class="crop-stage" id="cropEditWrap"><img id="cropImg" alt=""/></div>
@@ -673,6 +682,8 @@ body.light .theme-btn .moon{display:block}
     <button class="icon-btn only-edit" onclick="cropRotate(-90)">⟲ Rotate</button>
     <button class="icon-btn only-edit" onclick="cropRotate(90)">⟳ Rotate</button>
     <button class="icon-btn only-edit" onclick="cropReset()">Reset</button>
+    <label class="crop-check only-edit"><input type="checkbox" id="cropClean" checked/>Clean image</label>
+    <button class="icon-btn only-edit" id="cropOrigBtn" onclick="cropUseOriginal()">Use original photo</button>
     <button class="icon-btn go only-edit" onclick="cropPreviewStep()">Preview crop</button>
     <button class="icon-btn only-prev" onclick="cropBack()">← Adjust again</button>
     <button class="icon-btn go only-prev" onclick="cropConfirm()">✓ Use this image</button>
@@ -760,6 +771,7 @@ async function doLogin(){
 document.getElementById('workspaceInput').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
 document.getElementById('workspaceInput').value = lsGet('pc_last_code', '') || '';
 applyTheme(lsGet('pc_theme', 'light'));
+document.getElementById('autoClean').checked = lsGet('pc_autoclean', true) !== false;
 
 /* ── people: list from clients.json + any added on this device ── */
 function customKey(){ return 'pc_people_' + (clientConfig ? clientConfig._code : ''); }
@@ -781,7 +793,7 @@ function mergeWhere(base, kind){
   return base.concat(extra.map(c => Object.assign({_custom:true}, c)));
 }
 function locations(){ return mergeWhere((clientConfig.locations && clientConfig.locations.length) ? clientConfig.locations : DEFAULT_LOCATIONS, 'locs'); }
-function projects(){ return mergeWhere((clientConfig.projects || []).filter(p => p.active !== false), 'projs'); }
+function projects(){ return []; }   // single Project / site field only (Topline v3 decision) — the old separate project list is switched off
 
 function toggleAddWhere(kind, show){
   const row = document.getElementById(kind === 'loc' ? 'addLocRow' : 'addProjRow');
@@ -845,7 +857,7 @@ function renderWhereChips(){
   locations().filter(l => l.active !== false).forEach(l=>{
     lc.appendChild(whereChip(l, selectedLocation === l.label, ()=>{ selectedLocation = selectedLocation === l.label ? null : l.label; renderWhereChips(); }, 'loc'));
   });
-  lc.appendChild(addChip('+ Add location', ()=>toggleAddWhere('loc', true)));
+  lc.appendChild(addChip('+ Add project / site', ()=>toggleAddWhere('loc', true)));
   const pc = document.getElementById('projectChips');
   pc.innerHTML = '';
   projects().forEach(pr=>{
@@ -854,9 +866,9 @@ function renderWhereChips(){
   pc.appendChild(addChip('+ Add project', ()=>toggleAddWhere('proj', true)));
   const h = document.getElementById('whereHint');
   const parts = [];
-  if (selectedLocation) parts.push(`cash from <b>${escHtml(selectedLocation)}</b>`);
+  if (selectedLocation) parts.push(`<b>${escHtml(selectedLocation)}</b>`);
   if (selectedProject) parts.push(`charged to <b>${escHtml(selectedProject)}</b>`);
-  h.innerHTML = parts.length ? `Every bill in this batch: ${parts.join(', ')}. You can change any bill on the next screen.`
+  h.innerHTML = parts.length ? `Every bill in this batch goes to ${parts.join(', ')}. You can change any bill on the next screen.`
     : 'These apply to every bill in the batch — you can change any bill on the next screen.';
 }
 
@@ -965,9 +977,21 @@ async function fileToDataURL(file){
   return new Promise(res=>{ const r = new FileReader(); r.onload = ev=>res(ev.target.result); r.readAsDataURL(file); });
 }
 
-function addFiles(list){
-  list.forEach(f=>{ if(uploadedFiles.length < 20) uploadedFiles.push(f); });
-  renderThumbs();
+let processing = 0;
+async function addFiles(list){
+  const room = 20 - uploadedFiles.length;
+  list = list.slice(0, Math.max(0, room));
+  const auto = document.getElementById('autoClean').checked;
+  for (const f of list){
+    if (auto && f.type.startsWith('image/')){
+      processing++; renderThumbs();
+      let out = f;
+      try { out = await autoCleanFile(f); } catch(e){ console.warn('auto-clean failed', e); }
+      processing--;
+      uploadedFiles.push(out);
+    } else uploadedFiles.push(f);
+    renderThumbs();
+  }
 }
 function handleFiles(e){
   addFiles(Array.from(e.target.files));
@@ -991,16 +1015,17 @@ async function renderThumbs(){
     }
     div.innerHTML += `<div class="thumb-num">${i+1}</div><button class="thumb-del" title="Remove" onclick="removeFile(${i})">✕</button>`
       + (f.type.startsWith('image/') ? `<button class="thumb-crop" title="Crop" onclick="cropUpload(${i})">✂ Crop</button>` : '')
-      + (f._cropped ? `<span class="thumb-tag">CROPPED</span>` : '');
+      + (f._cropped ? `<span class="thumb-tag">CROPPED</span>` : f._auto === 'crop' ? `<span class="thumb-tag">AUTO-CROPPED</span>` : f._auto === 'clean' ? `<span class="thumb-tag">CLEANED</span>` : '');
     grid.appendChild(div);
   }
+  for (let k=0;k<processing;k++){ const b = document.createElement('div'); b.className='thumb busy'; b.textContent='Cleaning…'; grid.appendChild(b); }
   const n = uploadedFiles.length;
   const dz = document.getElementById('dropZone');
   dz.classList.toggle('compact', n > 0);
   document.getElementById('fileCount').textContent = `${n} / 20`;
   document.getElementById('dzText').textContent = n === 0 ? 'Drop receipts here or tap to upload' : (n >= 20 ? 'Maximum of 20 reached' : 'Add more receipts');
   document.getElementById('dzSmall').textContent = n === 0 ? 'JPG, PNG or PDF · up to 20 files' : (n >= 20 ? 'Remove one to add another' : `${20-n} more allowed`);
-  document.getElementById('extractBtn').disabled = n === 0;
+  document.getElementById('extractBtn').disabled = n === 0 || processing > 0;
   document.getElementById('extractHint').textContent = n > 0 ? `${n} receipt${n>1?'s':''} ready` : 'Add at least 1 receipt to continue';
 }
 
@@ -1221,7 +1246,11 @@ function openPdf(i){
 
 /* ── image cropping (Cropper.js) — before upload and on the review screen ── */
 let cropper = null, cropDone = null, cropBlob = null;
-function openCropper(dataURL, title, onDone){
+let cropOpts = {};
+function openCropper(dataURL, title, onDone, opts){
+  cropOpts = opts || {};
+  document.getElementById('cropClean').checked = cropOpts.clean !== false;
+  document.getElementById('cropOrigBtn').style.display = cropOpts.onOriginal ? '' : 'none';
   const m = document.getElementById('cropModal');
   m.classList.remove('previewing');
   document.getElementById('cropTitle').textContent = title;
@@ -1230,7 +1259,8 @@ function openCropper(dataURL, title, onDone){
   cropDone = onDone;
   m.classList.add('show');
   img.onload = ()=>{
-    cropper = new Cropper(img, {viewMode:1, autoCropArea:0.92, background:false, responsive:true, zoomOnWheel:false});
+    cropper = new Cropper(img, {viewMode:1, autoCropArea:0.92, background:false, responsive:true, zoomOnWheel:false,
+      ready(){ const bx = cropOpts.box; if (bx) this.cropper.setData({x:bx.x, y:bx.y, width:bx.w, height:bx.h}); }});
   };
   img.src = dataURL;
 }
@@ -1244,12 +1274,14 @@ function cropReset(){ if (cropper) cropper.reset(); }
 function cropPreviewStep(){
   if (!cropper) return;
   const canvas = cropper.getCroppedCanvas({maxWidth:2400, maxHeight:2400, fillColor:'#fff', imageSmoothingQuality:'high'});
+  if (document.getElementById('cropClean').checked) cleanCanvas(canvas);
   canvas.toBlob(b=>{
     cropBlob = b;
     document.getElementById('cropPreview').src = URL.createObjectURL(b);
     document.getElementById('cropModal').classList.add('previewing');
   }, 'image/jpeg', 0.9);
 }
+function cropUseOriginal(){ const fn = cropOpts.onOriginal; closeCrop(); if (fn) fn(); }
 function cropBack(){ document.getElementById('cropModal').classList.remove('previewing'); }
 async function cropConfirm(){
   if (!cropBlob || !cropDone) return closeCrop();
@@ -1259,13 +1291,14 @@ async function cropConfirm(){
 }
 async function cropUpload(i){
   const f = uploadedFiles[i];
-  openCropper(await fileToDataURL(f), `Crop bill ${i+1}`, async blob=>{
-    const name = f.name.replace(/\.[^.]+$/, '') + '.jpg';
+  const orig = f._orig || f;                      // always crop from the untouched photo
+  openCropper(await fileToDataURL(orig), `Crop bill ${i+1}`, async blob=>{
+    const name = orig.name.replace(/\.[^.]+$/, '') + '.jpg';
     const nf = new File([blob], name, {type:'image/jpeg'});
-    nf._cropped = true;
+    nf._cropped = true; nf._orig = orig; nf._box = f._box;
     uploadedFiles[i] = nf;
     renderThumbs();
-  });
+  }, {box: f._box || null, clean: true, onOriginal: f._orig ? ()=>{ uploadedFiles[i] = f._orig; renderThumbs(); } : null});
 }
 async function cropReview(i){
   const d = extractedData[i];
@@ -1277,7 +1310,110 @@ async function cropReview(i){
     box.innerHTML = `<img class="row-edit-img" src="${url}" alt="Receipt ${i+1}" onclick="openLightbox(${i})"/>`;
     const th = document.getElementById('panel-'+i).closest('.receipt-row').querySelector('.row-thumb-sm');
     if (th && th.tagName === 'IMG') th.src = url;
-  });
+  }, {clean: false});
+}
+
+/* ── automatic receipt detection + clean-up (runs in the browser, no upload needed) ──
+   1. shrink the photo, estimate the background colour from the border
+   2. receipt = bright, low-colour pixels that differ from the background → largest connected blob
+   3. crop to that blob (+ small margin), then whiten the paper and darken the text            */
+function loadImage(src){ return new Promise((res, rej)=>{ const im = new Image(); im.onload = ()=>res(im); im.onerror = rej; im.src = src; }); }
+function detectReceiptBox(img){
+  const NW = img.naturalWidth, NH = img.naturalHeight;
+  const sc = 360 / Math.max(NW, NH), w = Math.max(8, Math.round(NW*sc)), h = Math.max(8, Math.round(NH*sc));
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const cx = c.getContext('2d', {willReadFrequently:true}); cx.drawImage(img, 0, 0, w, h);
+  const px = cx.getImageData(0, 0, w, h).data, N = w*h;
+  const lum = new Float32Array(N), sat = new Float32Array(N);
+  for (let i=0;i<N;i++){ const r=px[i*4], g=px[i*4+1], b=px[i*4+2], mx=Math.max(r,g,b), mn=Math.min(r,g,b);
+    lum[i] = 0.299*r + 0.587*g + 0.114*b; sat[i] = mx ? (mx-mn)/mx : 0; }
+  // background colour = median of a thin border
+  const bw = Math.max(2, Math.round(Math.min(w,h)*0.04)), R=[], G=[], B=[];
+  for (let y=0;y<h;y++) for (let x=0;x<w;x++){ if (x<bw || y<bw || x>=w-bw || y>=h-bw){ const i=(y*w+x)*4; R.push(px[i]); G.push(px[i+1]); B.push(px[i+2]); } }
+  const med = a => { a.sort((p,q)=>p-q); return a[a.length>>1]; };
+  const br = med(R), bg = med(G), bb = med(B);
+  // Otsu threshold on brightness
+  const hist = new Array(256).fill(0); for (let i=0;i<N;i++) hist[lum[i]|0]++;
+  let sum=0; for (let t=0;t<256;t++) sum += t*hist[t];
+  let sB=0, wB=0, best=0, thr=160;
+  for (let t=0;t<256;t++){ wB += hist[t]; if (!wB) continue; const wF = N-wB; if (!wF) break; sB += t*hist[t];
+    const mB = sB/wB, mF = (sum-sB)/wF, v = wB*wF*(mB-mF)*(mB-mF); if (v > best){ best = v; thr = t; } }
+  const m0 = new Uint8Array(N);
+  for (let i=0;i<N;i++){ const r=px[i*4], g=px[i*4+1], b=px[i*4+2];
+    const d = Math.abs(r-br) + Math.abs(g-bg) + Math.abs(b-bb);
+    m0[i] = (lum[i] > thr && sat[i] < 0.38 && d > 60) ? 1 : 0; }
+  // erode once so the bill doesn't join up with bright patches in the background
+  const m = new Uint8Array(N);
+  for (let y=1;y<h-1;y++) for (let x=1;x<w-1;x++){ const i=y*w+x;
+    m[i] = m0[i] & m0[i-1] & m0[i+1] & m0[i-w] & m0[i+w]; }
+  // largest connected blob
+  const lab = new Int32Array(N), stack = new Int32Array(N);
+  let bestN=0, bestLab=0, bx0=0, by0=0, bx1=0, by1=0, cur=0;
+  for (let s0=0;s0<N;s0++){ if (!m[s0] || lab[s0]) continue; cur++;
+    let sp=0, n=0, x0=w, y0=h, x1=0, y1=0; stack[sp++]=s0; lab[s0]=cur;
+    while (sp){ const i = stack[--sp], x = i%w, y = (i/w)|0; n++;
+      if (x<x0) x0=x; if (x>x1) x1=x; if (y<y0) y0=y; if (y>y1) y1=y;
+      if (x>0 && m[i-1] && !lab[i-1]){ lab[i-1]=cur; stack[sp++]=i-1; }
+      if (x<w-1 && m[i+1] && !lab[i+1]){ lab[i+1]=cur; stack[sp++]=i+1; }
+      if (y>0 && m[i-w] && !lab[i-w]){ lab[i-w]=cur; stack[sp++]=i-w; }
+      if (y<h-1 && m[i+w] && !lab[i+w]){ lab[i+w]=cur; stack[sp++]=i+w; } }
+    if (n > bestN){ bestN=n; bestLab=cur; bx0=x0; by0=y0; bx1=x1; by1=y1; } }
+  if (bestN < N*0.06) return null;                                   // nothing that looks like a bill
+  const mg = Math.round(Math.max(w,h)*0.015);
+  bx0=Math.max(0,bx0-mg); by0=Math.max(0,by0-mg); bx1=Math.min(w-1,bx1+mg); by1=Math.min(h-1,by1+mg);
+  const area = (bx1-bx0+1)*(by1-by0+1);
+  if (area > N*0.9) return null;                                     // bill already fills the photo
+  // background mask: flood-fill from the photo edge over everything that isn't bill, then eat 1px into the bill edge
+  const bill = new Uint8Array(N); for (let i=0;i<N;i++) bill[i] = lab[i] === bestLab ? 1 : 0;
+  const bgm = new Uint8Array(N); let sp=0;
+  const push = i => { if (!bill[i] && !bgm[i]){ bgm[i]=1; stack[sp++]=i; } };
+  for (let x=0;x<w;x++){ push(x); push((h-1)*w+x); } for (let y=0;y<h;y++){ push(y*w); push(y*w+w-1); }
+  while (sp){ const i = stack[--sp], x = i%w;
+    if (x>0) push(i-1); if (x<w-1) push(i+1); if (i>=w) push(i-w); if (i<N-w) push(i+w); }
+  { const g = bgm.slice(); for (let y=1;y<h-1;y++) for (let x=1;x<w-1;x++){ const i=y*w+x; if (!bgm[i] && (bgm[i-1]|bgm[i+1]|bgm[i-w]|bgm[i+w])) g[i]=1; } bgm.set(g); }
+  const mc = document.createElement('canvas'); mc.width = w; mc.height = h;
+  const mx = mc.getContext('2d'), md = mx.createImageData(w, h);
+  for (let i=0;i<N;i++){ md.data[i*4]=255; md.data[i*4+1]=255; md.data[i*4+2]=255; md.data[i*4+3] = bgm[i] ? 255 : 0; }
+  mx.putImageData(md, 0, 0);
+  return {x: Math.round(bx0/sc), y: Math.round(by0/sc), w: Math.round((bx1-bx0+1)/sc), h: Math.round((by1-by0+1)/sc),
+          mask: mc, mx: bx0, my: by0, mw: bx1-bx0+1, mh: by1-by0+1};
+}
+function cleanCanvas(canvas){
+  const cx = canvas.getContext('2d', {willReadFrequently:true});
+  const W = canvas.width, H = canvas.height, im = cx.getImageData(0, 0, W, H), p = im.data, N = W*H;
+  const hist = new Array(256).fill(0);
+  for (let i=0;i<N;i++) hist[(0.299*p[i*4] + 0.587*p[i*4+1] + 0.114*p[i*4+2])|0]++;
+  const pct = q => { let acc=0, lim=N*q; for (let t=0;t<256;t++){ acc+=hist[t]; if (acc>=lim) return t; } return 255; };
+  const lo = pct(0.01), paperT = pct(0.55);
+  // paper colour = average of the brighter half → used to white-balance (removes yellow / grey cast)
+  let pr=0, pg=0, pb=0, pn=0;
+  for (let i=0;i<N;i++){ const L = 0.299*p[i*4] + 0.587*p[i*4+1] + 0.114*p[i*4+2]; if (L >= paperT){ pr+=p[i*4]; pg+=p[i*4+1]; pb+=p[i*4+2]; pn++; } }
+  if (!pn) return;
+  pr/=pn; pg/=pn; pb/=pn;
+  const sr = 255/Math.max(1, pr*0.97 - lo), sg = 255/Math.max(1, pg*0.97 - lo), sb = 255/Math.max(1, pb*0.97 - lo);
+  for (let i=0;i<N;i++){
+    let r = (p[i*4]-lo)*sr, g = (p[i*4+1]-lo)*sg, b = (p[i*4+2]-lo)*sb;
+    const L = 0.299*r + 0.587*g + 0.114*b;
+    if (L < 150){ const k = 0.82; r*=k; g*=k; b*=k; }                 // darker text
+    p[i*4] = r<0?0:r>255?255:r; p[i*4+1] = g<0?0:g>255?255:g; p[i*4+2] = b<0?0:b>255?255:b;
+  }
+  cx.putImageData(im, 0, 0);
+}
+async function autoCleanFile(f){
+  const img = await loadImage(await fileToDataURL(f));
+  const box = detectReceiptBox(img);
+  const sx = box ? box.x : 0, sy = box ? box.y : 0, sw = box ? box.w : img.naturalWidth, sh = box ? box.h : img.naturalHeight;
+  const k = Math.min(1, 2400 / Math.max(sw, sh));
+  const c = document.createElement('canvas'); c.width = Math.round(sw*k); c.height = Math.round(sh*k);
+  const cx = c.getContext('2d', {willReadFrequently:true});
+  cx.fillStyle = '#fff'; cx.fillRect(0, 0, c.width, c.height);
+  cx.drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
+  cleanCanvas(c);
+  if (box && box.mask){ cx.imageSmoothingEnabled = true; cx.drawImage(box.mask, box.mx, box.my, box.mw, box.mh, 0, 0, c.width, c.height); }  // then paint background white
+  const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.88));
+  const nf = new File([blob], f.name.replace(/\.[^.]+$/, '') + '.jpg', {type:'image/jpeg'});
+  nf._orig = f; nf._box = box ? {x:box.x, y:box.y, w:box.w, h:box.h} : null; nf._auto = box ? 'crop' : 'clean';
+  return nf;
 }
 
 function fakeDemoExtract(file, person){
@@ -1428,8 +1564,8 @@ function buildReviewScreen(){
               <div class="edit-field" id="epWrap_${i}"><label>Name</label><select id="ep_${i}" onchange="refreshRow(${i})">${personOptions(person)}</select></div>
               <div class="edit-field money"><label>Amount</label><input type="text" inputmode="decimal" autocomplete="off" id="ea_${i}" value="${toNum(d.amount).toFixed(2)}" oninput="cleanMoney(this);refreshRow(${i})"/></div>
               <div class="edit-field money"><label>VAT</label><input type="text" inputmode="decimal" autocomplete="off" id="ev2_${i}" value="${toNum(d.vat).toFixed(2)}" oninput="cleanMoney(this);refreshTotals()"/></div>
-              <div class="edit-field" id="elocWrap_${i}"><label>Cash location</label><select id="eloc_${i}" onchange="refreshRow(${i})"><option value=""${d._location?'':' selected'}>Select location…</option>${locOpts}</select></div>
-              ${projects().length ? `<div class="edit-field"><label>Project / site</label><select id="eproj_${i}" onchange="refreshRow(${i})"><option value=""${d._project?'':' selected'}>No project (office cost)</option>${projOpts}</select></div>` : '<div></div>'}
+              <div class="edit-field full" id="elocWrap_${i}"><label>Project / site</label><select id="eloc_${i}" onchange="refreshRow(${i})"><option value=""${d._location?'':' selected'}>Select project / site…</option>${locOpts}</select></div>
+              ${projects().length ? `<div class="edit-field"><label>Project / site</label><select id="eproj_${i}" onchange="refreshRow(${i})"><option value=""${d._project?'':' selected'}>No project (office cost)</option>${projOpts}</select></div>` : ''}
               <div class="edit-field full lcombo" id="lc_${i}"><label>Ledger</label>
                 <svg class="lcombo-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
                 <input type="text" class="lcombo-input" id="lci_${i}" autocomplete="off" placeholder="Search code or name…" onfocus="openLedger(${i})" oninput="filterLedger(${i})" onkeydown="ledgerKey(event,${i})" onblur="closeLedger(${i})"/>
@@ -1460,7 +1596,7 @@ function refreshRow(i){
   const person = v('ep');
   const inv = v('einv');
   document.getElementById('hv_'+i).textContent = v('ev') || 'Unknown vendor';
-  document.getElementById('hm_'+i).textContent = [v('ed') || 'No date', ledger, person || 'No name', v('eproj') || '', inv ? 'Inv# '+inv : ''].filter(Boolean).join(' · ');
+  document.getElementById('hm_'+i).textContent = [v('ed') || 'No date', ledger, person || 'No name', v('eloc') || '', inv ? 'Inv# '+inv : ''].filter(Boolean).join(' · ');
   document.getElementById('elocWrap_'+i).classList.toggle('need', !v('eloc'));
   const card = document.getElementById('ecard_'+i);
   document.getElementById('ecardWrap_'+i).classList.toggle('need', !card.disabled && card.value.length !== 4);
@@ -1518,9 +1654,9 @@ function collectFinal(){
       site_office: g('eloc') || '',              // kept for the existing "Site / Office" Excel column
       location: g('eloc') || '',
       location_code: loc ? (loc.code || '') : '',
-      project: proj ? proj.label : '',
-      project_code: proj ? (proj.code || '') : '',
-      cost_centre: proj ? (proj.code || proj.label) : (loc ? (loc.code || loc.label) : ''),
+      project: g('eloc') || '',                  // one Project / site field — same value as location
+      project_code: loc ? (loc.code || '') : '',
+      cost_centre: loc ? (loc.code || loc.label) : '',
       payment_method: pay,
       card_last4: pay === 'Card' ? (g('ecard') || '') : '',
       vehicle_details: (g('eveh') || '').trim(),
@@ -1544,7 +1680,7 @@ async function runConfirmAll(){
   const bad = r => !r.person || !r.location || (r.payment_method === 'Card' && !/^\d{4}$/.test(r.card_last4));
   const missing = payload.filter(bad).map(r=>r._i);
   if (missing.length){
-    setStatus('confirmStatus','error', `Fill in the highlighted fields (name, cash location, or card last 4 digits) on ${missing.length} bill${missing.length>1?'s':''} before saving.`);
+    setStatus('confirmStatus','error', `Fill in the highlighted fields (name, project / site, or card last 4 digits) on ${missing.length} bill${missing.length>1?'s':''} before saving.`);
     missing.forEach(i=>{ const p=document.getElementById('panel-'+i); if(!p.classList.contains('open')) toggleRow(i); });
     document.getElementById('panel-'+missing[0]).scrollIntoView({behavior:'smooth', block:'center'});
     return;
