@@ -993,8 +993,8 @@ async function addFiles(list){
       processing--;
       uploadedFiles.push(out);
     } else uploadedFiles.push(f);
-    renderThumbs();
   }
+  renderThumbs();
 }
 function handleFiles(e){
   addFiles(Array.from(e.target.files));
@@ -1003,25 +1003,32 @@ function handleFiles(e){
 
 const FILE_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4"/></svg>`;
 
+/* Thumbnails are built off-screen and only the latest redraw is shown,
+   so adding many photos at once can never produce duplicate previews. */
+let thumbGen = 0;
+const thumbURLs = new WeakMap();
+function thumbURL(f){ let u = thumbURLs.get(f); if (!u){ u = URL.createObjectURL(f); thumbURLs.set(f, u); } return u; }
 async function renderThumbs(){
+  const gen = ++thumbGen;
   const grid = document.getElementById('thumbGrid');
-  grid.innerHTML = '';
+  const frag = document.createDocumentFragment();
   for(let i=0;i<uploadedFiles.length;i++){
     const f = uploadedFiles[i];
     const div = document.createElement('div');
     div.className = 'thumb';
     if(f.type.startsWith('image/')){
-      const url = await fileToDataURL(f);
-      div.innerHTML = `<img src="${url}" alt="${escHtml(f.name)}"/>`;
+      div.innerHTML = `<img src="${thumbURL(f)}" alt="${escHtml(f.name)}" loading="lazy"/>`;
     } else {
       div.innerHTML = `<div class="thumb-file">${FILE_SVG}<span>${escHtml(f.name.split('.').pop().toUpperCase())}</span></div>`;
     }
     div.innerHTML += `<div class="thumb-num">${i+1}</div><button class="thumb-del" title="Remove" onclick="removeFile(${i})">✕</button>`
       + (f.type.startsWith('image/') ? `<button class="thumb-crop" title="Crop" onclick="cropUpload(${i})">✂ Crop</button>` : '')
       + (f._cropped ? `<span class="thumb-tag">CROPPED</span>` : f._auto === 'crop' ? `<span class="thumb-tag">AUTO-CROPPED</span>` : f._auto === 'clean' ? `<span class="thumb-tag">CLEANED</span>` : '');
-    grid.appendChild(div);
+    frag.appendChild(div);
   }
-  for (let k=0;k<processing;k++){ const b = document.createElement('div'); b.className='thumb busy'; b.textContent='Cleaning…'; grid.appendChild(b); }
+  for (let k=0;k<processing;k++){ const b = document.createElement('div'); b.className='thumb busy'; b.textContent='Cleaning…'; frag.appendChild(b); }
+  if (gen !== thumbGen) return;          // a newer redraw has started — drop this one
+  grid.replaceChildren(frag);
   const n = uploadedFiles.length;
   const dz = document.getElementById('dropZone');
   dz.classList.toggle('compact', n > 0);
